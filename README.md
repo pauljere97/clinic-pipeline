@@ -122,6 +122,9 @@ build to succeed, and executes `dbt snapshot`. It snapshots users, patients,
 doctors, services, and appointments in `CLINIC.SNAPSHOT`, recording changed
 versions and invalidating rows removed from the silver tables.
 
+The `load_gold_models` DAG waits for successful snapshots, then builds the
+gold dimensions, appointment fact, and analytics marts.
+
 Rebuild and recreate Airflow after changing the Compose mounts:
 
 ```sh
