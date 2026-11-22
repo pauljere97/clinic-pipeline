@@ -171,13 +171,66 @@ def generate_fake_users(num_users):
         patient_age = faker.date_of_birth(minimum_age=0, maximum_age=100).strftime("%Y/%m/%d") if not is_doctor else None
         optional_param = doctor_specialization if is_doctor else patient_age
         create_user(first_name, last_name, password, email, city, gender, is_doctor, optional_param)
-        
+
+def generate_services():
+    services = [
+        {"service_name": "General Consultation", "price": 50.00, "duration": 30},
+        {"service_name": "Dental Cleaning", "price": 80.00, "duration": 45},
+        {"service_name": "Eye Examination", "price": 60.00, "duration": 30},
+        {"service_name": "Physical Therapy", "price": 100.00, "duration": 60},
+        {"service_name": "Vaccination", "price": 40.00, "duration": 15},
+        {"service_name": "Cardiology Checkup", "price": 120.00, "duration": 60},
+        {"service_name": "Dermatology Consultation", "price": 90.00, "duration": 45},
+        {"service_name": "Neurology Assessment", "price": 150.00, "duration": 60},
+        {"service_name": "Pediatric Consultation", "price": 70.00, "duration": 30},
+        {"service_name": "Radiology Imaging", "price": 200.00, "duration": 90}
+    ]
+    for service in services:
+        with db_connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO services (service_name, price, duration)
+                VALUES (%s, %s, %s)
+                """,
+                (service["service_name"], service["price"], service["duration"])
+            )
+            print(f"==> Service '{service['service_name']}' created successfully.")  
+
+def generate_appointments(num_appointments):
+    with db_connection.cursor() as cursor:
+        cursor.execute("SELECT id FROM patients")
+        patient_ids = [row[0] for row in cursor.fetchall()]
+
+        cursor.execute("SELECT id FROM doctors")
+        doctor_ids = [row[0] for row in cursor.fetchall()]
+
+        cursor.execute("SELECT id FROM services")
+        service_ids = [row[0] for row in cursor.fetchall()]
+
+    for _ in range(num_appointments):
+        patient_id = faker.random_element(elements=patient_ids)
+        doctor_id = faker.random_element(elements=doctor_ids)
+        service_id = faker.random_element(elements=service_ids)
+        appointment_date = faker.date_time_between(start_date='-1y', end_date='now')
+
+        with db_connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO appointments (patient_id, doctor_id, service_id, appointment_date)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (patient_id, doctor_id, service_id, appointment_date)
+            )
+            print(f"==> Appointment created successfully for patient ID {patient_id} with doctor ID {doctor_id} on {appointment_date}.")
+
 with db_connection.cursor() as cursor:
     cursor.execute("SELECT 1")
     if cursor.fetchone() == (1,):
         print(f"==> Database connection successful at {POSTGRES_HOST}:{POSTGRES_PORT}")
         create_all_tables()
-        generate_fake_users(10)
+        generate_fake_users(5)
+        # generate_services()
+        generate_appointments(10)
     else:
         print(f"==> Database connection failed at {POSTGRES_HOST}:{POSTGRES_PORT}")
 
