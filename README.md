@@ -25,3 +25,48 @@ sample records.
 All Airflow components use the same `AIRFLOW_WEBSERVER_SECRET_KEY`; keep it
 stable across restarts. After adding or changing it, recreate the Airflow
 services with `docker compose up -d --force-recreate airflow-init airflow-webserver airflow-scheduler`.
+
+## Stream PostgreSQL changes to S3
+
+The local CDC stack uses Kafka, Kafka Connect, Debezium, and the Confluent S3
+Sink connector. It snapshots all tables in the PostgreSQL `public` schema and
+then streams ongoing inserts, updates, and deletes. This includes the
+Faker-generated `users.password` values; use only synthetic data.
+
+1. In `.env`, set `AWS_S3_BUCKET_ARN` to the ARN of an existing private S3
+   bucket, provide AWS credentials with permission to locate the bucket and
+   write objects, and set `AWS_REGION` (the example defaults to `eu-north-1`).
+   Do not commit `.env`. Enable the bucket's default encryption.
+2. Start the stack:
+
+   ```sh
+   docker compose up --build -d
+   ```
+
+3. Trigger `generate_clinic_data` in Airflow so the tables exist before
+   Debezium creates its publication and takes the initial snapshot.
+4. Register the connectors:
+
+   ```sh
+   docker compose --profile cdc-init run --rm connect-init
+   ```
+
+5. Check connector status:
+
+   ```sh
+   curl -fsS http://localhost:8083/connectors/clinic-postgres/status
+   curl -fsS http://localhost:8083/connectors/clinic-s3-sink/status
+   ```
+
+The sink writes compressed JSON CDC records below `clinic/raw/`, grouped by
+topic and Kafka partition. It flushes at 100 records or on a one-minute UTC
+schedule. Debezium's delete event is retained; Kafka tombstone records are
+ignored. Since delivery is at-least-once, downstream consumers should dedupe
+using the record key and source LSN.
+
+The source connector currently uses the local PostgreSQL `POSTGRES_USER`
+credentials, which are typically superuser credentials in this development
+Compose setup. Before using real data or a production database, replace these
+with a dedicated replication account with only the required replication and
+table-read permissions. The Compose Kafka and Connect listeners are intended
+for local development, not direct production exposure.

@@ -1,0 +1,18 @@
+{
+  "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+  "tasks.max": "1",
+  "database.hostname": "postgres",
+  "database.port": "5432",
+  "database.user": "${env:POSTGRES_USER}",
+  "database.password": "${env:POSTGRES_PASSWORD}",
+  "database.dbname": "${env:POSTGRES_DB}",
+  "topic.prefix": "clinic",
+  "plugin.name": "pgoutput",
+  "slot.name": "clinic_pipeline_slot",
+  "publication.name": "clinic_pipeline_publication",
+  "publication.autocreate.mode": "all_tables",
+  "schema.include.list": "public",
+  "snapshot.mode": "initial",
+  "decimal.handling.mode": "string",
+  "heartbeat.interval.ms": "10000"
+}
