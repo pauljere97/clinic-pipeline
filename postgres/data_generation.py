@@ -1,6 +1,8 @@
 from dotenv import load_dotenv
 import psycopg2
 import os
+from faker import Faker
+faker = Faker("en_US")
 load_dotenv()
 
 POSTGRES_USER = os.getenv("POSTGRES_USER")
@@ -116,7 +118,7 @@ def create_all_tables():
     create_appointments_table()
     print(f"==> Number of tables in the database: {count_tables()}")
 
-def create_user(first_name, last_name, password, email, city, gender, is_doctor):
+def create_user(first_name, last_name, password, email, city, gender, is_doctor, optional_param=None):
     with db_connection.cursor() as cursor:
         cursor.execute(
             """
@@ -130,9 +132,9 @@ def create_user(first_name, last_name, password, email, city, gender, is_doctor)
         user_id = cursor.fetchone()[0]  # Get the ID of the newly created user
         print(f"==> User created successfully with ID: {user_id}")
         if is_doctor:
-            create_doctor(user_id, 'Radiology')  # Create a doctor for the user with specialization 'Radiology'
+            create_doctor(user_id, optional_param)  # Create a doctor for the user with specialization 'Radiology'
         else:
-            create_patient(user_id, '1997/12/29')  # Create a patient for the user with age 30
+            create_patient(user_id, optional_param)  # Create a patient for the user with age 30
 
 def create_patient(user_id, age):
     with db_connection.cursor() as cursor:
@@ -155,11 +157,29 @@ def create_doctor(user_id, specialization):
             (user_id, specialization)
         )
         print("==> Doctor created successfully.")
+
+def generate_fake_users(num_users):
+    for _ in range(num_users):
+        first_name = faker.first_name()
+        last_name = faker.last_name()
+        password = faker.password(length=10)
+        email = faker.unique.email()
+        city = faker.city()
+        gender = faker.random_element(elements=('Male', 'Female'))
+        is_doctor = faker.boolean(chance_of_getting_true=10)  # Randomly decide if the user is a doctor or not
+        doctor_specialization = faker.random_element(elements=('Radiology', 'Cardiology', 'Dermatology', 'Neurology', 'Pediatrics')) if is_doctor else None
+        patient_age = faker.date_of_birth(minimum_age=0, maximum_age=100).strftime("%Y/%m/%d") if not is_doctor else None
+        optional_param = doctor_specialization if is_doctor else patient_age
+        create_user(first_name, last_name, password, email, city, gender, is_doctor, optional_param)
+        
 with db_connection.cursor() as cursor:
     cursor.execute("SELECT 1")
     if cursor.fetchone() == (1,):
         print(f"==> Database connection successful at {POSTGRES_HOST}:{POSTGRES_PORT}")
         create_all_tables()
-        create_user("John", "Doe", "password123", "john.doe8@example.com", "New York", "Male", True)
+        generate_fake_users(10)
     else:
         print(f"==> Database connection failed at {POSTGRES_HOST}:{POSTGRES_PORT}")
+
+
+
