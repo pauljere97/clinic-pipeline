@@ -118,7 +118,7 @@ def create_all_tables():
     create_appointments_table()
     print(f"==> Number of tables in the database: {count_tables()}")
 
-def create_user(first_name, last_name, password, email, city, gender, is_doctor, optional_param=None):
+def create_user(first_name, last_name, password, email, city, gender, is_doctor, optional_param):
     with db_connection.cursor() as cursor:
         cursor.execute(
             """
@@ -159,14 +159,16 @@ def create_doctor(user_id, specialization):
         print("==> Doctor created successfully.")
 
 def generate_fake_users(num_users):
-    for _ in range(num_users):
+    for user_index in range(num_users):
         first_name = faker.first_name()
         last_name = faker.last_name()
         password = faker.password(length=10)
         email = faker.unique.email()
         city = faker.city()
         gender = faker.random_element(elements=('Male', 'Female'))
-        is_doctor = faker.boolean(chance_of_getting_true=10)  # Randomly decide if the user is a doctor or not
+        is_doctor = user_index == 0 or (
+            user_index > 1 and faker.boolean(chance_of_getting_true=10)
+        )
         doctor_specialization = faker.random_element(elements=('Radiology', 'Cardiology', 'Dermatology', 'Neurology', 'Pediatrics')) if is_doctor else None
         patient_age = faker.date_of_birth(minimum_age=0, maximum_age=100).strftime("%Y/%m/%d") if not is_doctor else None
         optional_param = doctor_specialization if is_doctor else patient_age
@@ -206,6 +208,10 @@ def generate_appointments(num_appointments):
 
         cursor.execute("SELECT id FROM services")
         service_ids = [row[0] for row in cursor.fetchall()]
+        if service_ids == []:
+            generate_services()
+            cursor.execute("SELECT id FROM services")
+            service_ids = [row[0] for row in cursor.fetchall()] 
 
     for _ in range(num_appointments):
         patient_id = faker.random_element(elements=patient_ids)
@@ -223,14 +229,38 @@ def generate_appointments(num_appointments):
             )
             print(f"==> Appointment created successfully for patient ID {patient_id} with doctor ID {doctor_id} on {appointment_date}.")
 
+def show_all_records_count():
+    with db_connection.cursor() as cursor:
+        cursor.execute("SELECT COUNT(*) FROM users")
+        users_count = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM patients")
+        patients_count = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM doctors")
+        doctors_count = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM services")
+        services_count = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM appointments")
+        appointments_count = cursor.fetchone()[0]
+
+    print(f"==> Total records in the database:")
+    print(f"Users: {users_count}")
+    print(f"Patients: {patients_count}")
+    print(f"Doctors: {doctors_count}")
+    print(f"Services: {services_count}")
+    print(f"Appointments: {appointments_count}")
+
 with db_connection.cursor() as cursor:
     cursor.execute("SELECT 1")
     if cursor.fetchone() == (1,):
         print(f"==> Database connection successful at {POSTGRES_HOST}:{POSTGRES_PORT}")
         create_all_tables()
         generate_fake_users(5)
-        # generate_services()
         generate_appointments(10)
+        show_all_records_count()
     else:
         print(f"==> Database connection failed at {POSTGRES_HOST}:{POSTGRES_PORT}")
 
