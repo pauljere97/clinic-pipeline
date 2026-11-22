@@ -1,0 +1,52 @@
+version: 2
+
+snapshots:
+  - name: snap_users
+    columns:
+      - name: dbt_scd_id
+        data_tests:
+          - unique
+          - not_null
+      - name: dbt_valid_from
+        data_tests:
+          - not_null
+
+  - name: snap_patients
+    columns:
+      - name: dbt_scd_id
+        data_tests:
+          - unique
+          - not_null
+      - name: dbt_valid_from
+        data_tests:
+          - not_null
+
+  - name: snap_doctors
+    columns:
+      - name: dbt_scd_id
+        data_tests:
+          - unique
+          - not_null
+      - name: dbt_valid_from
+        data_tests:
+          - not_null
+
+  - name: snap_services
+    columns:
+      - name: dbt_scd_id
+        data_tests:
+          - unique
+          - not_null
+      - name: dbt_valid_from
+        data_tests:
+          - not_null
+
+  - name: snap_appointments
+    columns:
+      - name: dbt_scd_id
+        data_tests:
+          - unique
+          - not_null
+      - name: dbt_valid_from
+        data_tests:
+          - not_null

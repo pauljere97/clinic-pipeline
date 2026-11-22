@@ -117,6 +117,11 @@ current-state models. The silver layer contains deduplicated users, patients,
 doctors, services, and appointments. It applies deletes and removes passwords
 from the current-state user table.
 
+The `load_snapshots` DAG runs every 10 minutes, waits for the matching silver
+build to succeed, and executes `dbt snapshot`. It snapshots users, patients,
+doctors, services, and appointments in `CLINIC.SNAPSHOT`, recording changed
+versions and invalidating rows removed from the silver tables.
+
 Rebuild and recreate Airflow after changing the Compose mounts:
 
 ```sh
