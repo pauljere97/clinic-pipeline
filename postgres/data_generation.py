@@ -19,14 +19,6 @@ db_connection = psycopg2.connect(
 
 db_connection.autocommit = True # Set autocommit to True to avoid the need for explicit commit statements
 
-with db_connection.cursor() as cursor:
-    cursor.execute("SELECT 1")
-    if cursor.fetchone() == (1,):
-        print(f"==> Database connection successful at {POSTGRES_HOST}:{POSTGRES_PORT}")
-    else:
-        print(f"==> Database connection failed at {POSTGRES_HOST}:{POSTGRES_PORT}")
-
-
 def count_tables():
     with db_connection.cursor() as cursor:
         cursor.execute(
@@ -115,11 +107,59 @@ def create_appointments_table():
             """
         )
         print("==> Appointments table created successfully.")
-        
-create_users_table()
-create_patients_table()
-create_doctors_table()
-create_services_table()
-create_appointments_table()
 
-print(f"==> Number of tables in the database: {count_tables()}")
+def create_all_tables():
+    create_users_table()
+    create_patients_table()
+    create_doctors_table()
+    create_services_table()
+    create_appointments_table()
+    print(f"==> Number of tables in the database: {count_tables()}")
+
+def create_user(first_name, last_name, password, email, city, gender, is_doctor):
+    with db_connection.cursor() as cursor:
+        cursor.execute(
+            """
+            INSERT INTO users (first_name, last_name, password, email, city, gender)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """,
+            (first_name, last_name, password, email, city, gender)
+        )
+
+        user_id = cursor.fetchone()[0]  # Get the ID of the newly created user
+        print(f"==> User created successfully with ID: {user_id}")
+        if is_doctor:
+            create_doctor(user_id, 'Radiology')  # Create a doctor for the user with specialization 'Radiology'
+        else:
+            create_patient(user_id, '1997/12/29')  # Create a patient for the user with age 30
+
+def create_patient(user_id, age):
+    with db_connection.cursor() as cursor:
+        cursor.execute(
+            """
+            INSERT INTO patients (user_id, age)
+            VALUES (%s, %s)
+            """,
+            (user_id, age)
+        )
+        print("==> Patient created successfully.")
+
+def create_doctor(user_id, specialization):
+    with db_connection.cursor() as cursor:
+        cursor.execute(
+            """
+            INSERT INTO doctors (user_id, specialization)
+            VALUES (%s, %s)
+            """,
+            (user_id, specialization)
+        )
+        print("==> Doctor created successfully.")
+with db_connection.cursor() as cursor:
+    cursor.execute("SELECT 1")
+    if cursor.fetchone() == (1,):
+        print(f"==> Database connection successful at {POSTGRES_HOST}:{POSTGRES_PORT}")
+        create_all_tables()
+        create_user("John", "Doe", "password123", "john.doe8@example.com", "New York", "Male", True)
+    else:
+        print(f"==> Database connection failed at {POSTGRES_HOST}:{POSTGRES_PORT}")
