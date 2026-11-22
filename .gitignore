@@ -1,3 +1,4 @@
 .env
+.dbt/
 postgres/__pycache__/
 airflow/dags/__pycache__/

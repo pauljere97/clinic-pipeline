@@ -2,3 +2,5 @@ python-dotenv
 psycopg2-binary
 faker
 apache-airflow
+dbt-core>=1.12,<2
+dbt-snowflake>=1.12,<2
