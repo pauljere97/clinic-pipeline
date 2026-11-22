@@ -1,1 +1,2 @@
 .env
+postgres/__pycache__/
