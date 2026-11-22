@@ -13,9 +13,9 @@ DEFAULT_ARGS = {
 
 with DAG(
     dag_id="load_bronze_models",
-    description="Load new S3 CDC files into Snowflake bronze models",
+    description="Load new S3 CDC data into Snowflake bronze models",
     start_date=datetime(2024, 1, 1),
-    schedule="0 0 * * *", # Run every day at 1 AM
+    schedule=timedelta(minutes=10),
     catchup=False,
     max_active_runs=1,
     default_args=DEFAULT_ARGS,

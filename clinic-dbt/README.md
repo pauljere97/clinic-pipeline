@@ -1,7 +1,7 @@
 # clinic_dbt
 
 This dbt project loads PostgreSQL CDC data from S3 into Snowflake bronze
-models.
+models and creates current-state silver tables.
 
 The local profile is stored in the repository's ignored `.dbt/profiles.yml`.
 Replace its `private_key_path` placeholder with the absolute path to the

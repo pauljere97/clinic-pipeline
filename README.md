@@ -111,6 +111,12 @@ dbt build --select path:models/bronze \
   --profiles-dir /opt/airflow/.dbt
 ```
 
+The `load_silver_models` DAG runs on the same 10-minute schedule and waits for
+the bronze DAG's matching bronze build to succeed. It then builds the silver
+current-state models. The silver layer contains deduplicated users, patients,
+doctors, services, and appointments. It applies deletes and removes passwords
+from the current-state user table.
+
 Rebuild and recreate Airflow after changing the Compose mounts:
 
 ```sh
