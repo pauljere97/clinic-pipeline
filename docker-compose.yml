@@ -14,9 +14,18 @@ x-airflow-common: &airflow-common
         POSTGRES_USER: ${POSTGRES_USER}
         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
         POSTGRES_DB: ${POSTGRES_DB}
+        AWS_S3_BUCKET_ARN: ${AWS_S3_BUCKET_ARN:?Set AWS_S3_BUCKET_ARN in .env}
+        AWS_REGION: ${AWS_REGION:-eu-north-1}
+        SNOWFLAKE_PRIVATE_KEY_PATH: ${SNOWFLAKE_PRIVATE_KEY_PATH:?Set SNOWFLAKE_PRIVATE_KEY_PATH in .env}
     volumes:
         - ./airflow/dags:/opt/airflow/dags
         - ./postgres:/opt/airflow/postgres:ro
+        - ./clinic-dbt:/opt/airflow/clinic-dbt
+        - ./.dbt:/opt/airflow/.dbt:ro
+        - type: bind
+          source: ${SNOWFLAKE_PRIVATE_KEY_PATH:?Set SNOWFLAKE_PRIVATE_KEY_PATH in .env}
+          target: ${SNOWFLAKE_PRIVATE_KEY_PATH:?Set SNOWFLAKE_PRIVATE_KEY_PATH in .env}
+          read_only: true
 
 services:
     postgres:

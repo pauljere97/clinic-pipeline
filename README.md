@@ -96,6 +96,28 @@ dbt build --select path:models/bronze \
   --profiles-dir .dbt
 ```
 
+## Run bronze models periodically in Airflow
+
+Set `SNOWFLAKE_PRIVATE_KEY_PATH` in `.env` to the absolute private-key file
+path outside this repository. Docker Compose mounts that file at the same
+container path and mounts the dbt project and profile directory into Airflow.
+
+The `load_bronze_models` DAG runs every 10 minutes with one active run, retries
+twice, and executes:
+
+```sh
+dbt build --select path:models/bronze \
+  --project-dir /opt/airflow/clinic-dbt \
+  --profiles-dir /opt/airflow/.dbt
+```
+
+Rebuild and recreate Airflow after changing the Compose mounts:
+
+```sh
+docker compose up -d --build --force-recreate \
+  airflow-init airflow-webserver airflow-scheduler
+```
+
 The bronze layer is intentionally append-oriented:
 
 - `bronze_cdc_events` stores the complete raw Debezium envelope.
