@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: bronze_cdc_events
+    description: "Append-only Snowflake COPY load of raw gzip JSON CDC events from S3."
+    columns:
+      - name: cdc_id
+        description: "Stable file-name plus file-row identifier."
+        data_tests:
+          - unique
+          - not_null
+      - name: raw_record
+        data_tests:
+          - not_null
+      - name: source_file
+        data_tests:
+          - not_null
+
+  - name: bronze_users
+    description: "Bronze CDC events flattened for the public.users table."
+    columns:
+      - name: cdc_id
+        data_tests:
+          - unique
+          - not_null
+      - name: operation
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['c', 'u', 'd', 'r']
+
+  - name: bronze_patients
+    description: "Bronze CDC events flattened for the public.patients table."
+    columns:
+      - name: cdc_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: bronze_doctors
+    description: "Bronze CDC events flattened for the public.doctors table."
+    columns:
+      - name: cdc_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: bronze_services
+    description: "Bronze CDC events flattened for the public.services table."
+    columns:
+      - name: cdc_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: bronze_appointments
+    description: "Bronze CDC events flattened for the public.appointments table."
+    columns:
+      - name: cdc_id
+        data_tests:
+          - unique
+          - not_null
